@@ -7,7 +7,7 @@ name = "datasage"
 version = "1.0.0"
 description = "Automated data analytics library for insights, visualizations, and reports"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<4.0"
 authors = [
     {name = "Virendra Vijay Bamne", email = "virendrabamne@gmail.com"}
 ]
