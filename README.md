@@ -1,228 +1,191 @@
-# DATASAGE - Automated Data Analytics Library
+# DATASAGE
 
-![CI](https://github.com/yourusername/datasage/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/virendravijaybamne/datasage/actions/workflows/ci.yml/badge.svg)](https://github.com/virendravijaybamne/datasage/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/datasage.svg)](https://pypi.org/project/datasage/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/datasage.svg)](https://pypi.org/project/datasage/)
+[![License](https://img.shields.io/pypi/l/datasage.svg)](https://github.com/virendravijaybamne/datasage/blob/main/LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Alpha-yellow)
+**DATASAGE** is a polished, professional Python analytics platform for automated dataset cleaning, insight generation, visualization, and reporting.
 
-**DATASAGE** is a production-ready Python library for automated data analytics that automatically cleans datasets, generates statistical insights, creates visualizations, and produces professional reports—all with minimal code.
-
-## 🎯 Key Fe
- atures
-
-- **🧹 Intelligent Data Cleaning**
-  - Automatic missing value handling (drop, fill, interpolate)
-  - Outlier detection and treatment (IQR, Z-score methods)
-  - Duplicate identification and removal
-
-- **📊 Comprehensive Insights**
-  - Statistical summaries (mean, median, std, skewness, kurtosis)
-  - Correlation analysis between variables
-  - Categorical variable analysis
-  -  Trend detection and growth rate calculation
-
-- **📈 Beautiful Visualizations**
-  - Auto-generated charts (bar, line, scatter, pie)
-  - Distribution plots (histograms, KDE, box plots)
-  - Correlation heatmaps and missing value visualizations
-
-- **📄 Professional Reports**
-  - Formatted text reports
-  - High-quality PDF reports with embedded visualizations
-  - Customizable reporting components
-
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-pip install datasage
-```
-
-Or install from source:
-
-```bash
-git clone https://github.com/yourusername/datasage.git
-cd datasage
-pip install -e .
-```
-
-### 5-Minute Tutorial
-
-```python
-import pandas as pd
-from datasage import Analyzer
-
-# Load your data
-df = pd.read_csv('data.csv')
-
-# Initialize analyzer
-analyzer = Analyzer(df)
-
-# Clean data
-analyzer.clean()
-
-# Analyze
-insights = analyzer.analyze()
-
-# Visualize
-analyzer.visualize()
-
-# Generate report
-analyzer.generate_report('report.pdf')
-```
-
-That's it! You now have a complete analysis with visualizations and a professional report.
-
-## 📚 Documentation
-
-- [Installation Guide](INSTALLATION.md)
-- [API Reference](API.md)
-- [Usage Examples](EXAMPLES.md)
-- [Contributing Guide](CONTRIBUTING.md)
-
-## 🏗️ Architecture
-
-DATASAGE is built with modular, production-grade architecture:
-
-```
-datasage/
-├── cleaner/          # Data preprocessing
-├── insights/         # Statistical analysis
-├── visualization/    # Chart generation
-├── report/           # Report generation
-└── core/             # Orchestrator & utilities
-```
-
-Each module:
-- ✅ Has a single responsibility
-- ✅ Can be used independently
-- ✅ Follows best practices
-- ✅ Is fully documented
-- ✅ Is tested
-
-## 💻 Requirements
-
-- Python 3.10+
-- pandas ≥ 1.3.0
-- numpy ≥ 1.21.0
-- matplotlib ≥ 3.4.0
-- seaborn ≥ 0.11.0
-- scipy ≥ 1.7.0
-- reportlab ≥ 3.6.0
-
-## 📖 Usage Examples
-
-### Basic Analysis
-
-```python
-from datasage import Analyzer
-import pandas as pd
-
-df = pd.read_csv('sales.csv')
-analyzer = Analyzer(df)
-
-# One-liner analysis
-analyzer.clean().analyze().visualize()
-
-# Generate report
-analyzer.generate_report('sales_analysis.pdf')
-```
-
-### Custom Workflows
-
-```python
-from datasage.cleaner import MissingValueHandler, OutlierDetector
-from datasage.insights import CorrelationAnalyzer
-
-# Use individual modules
-handler = MissingValueHandler()
-handler.analyze(df)  # See what's missing
-df_clean = handler.handle(df, strategy='median')
-
-detector = OutlierDetector(method='iqr')
-df_clean = detector.cap_outliers(df_clean)
-
-# Analyze correlations
-corr = CorrelationAnalyzer(threshold=0.7)
-corr.compute(df_clean)
-high_corrs = corr.find_high_correlations()
-```
-
-### Custom Reports
-
-```python
-from datasage.report import TextReportGenerator
-
-report = TextReportGenerator()
-report.add_header("My Analysis")
-report.add_paragraph("Key findings...")
-report.add_table(results_df)
-report.save('my_report.txt')
-```
-
-## 🧪 Testing
-
-Run tests with pytest:
-
-```bash
-pytest tests/
-pytest --cov=datasage tests/  # With coverage
-```
-
-## ▶️ Run Locally
-
-Quick script to create a virtual environment, install dependencies, and run the basic example:
-
-PowerShell:
-
-```powershell
-.\scripts\setup_and_run.ps1
-```
-
-Windows (cmd):
-
-```bat
-run_example.bat
-```
-
-Reports and visualizations are saved to `./examples/output`.
-
-## 📦 Publishing
-
-### Build Distribution
-
-```bash
-pip install build
-python -m build
-```
-
-### Upload to PyPI
-
-```bash
-pip install twine
-twine upload dist/*
-```
-
-## 🤝 Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## 📄 License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
-
-## 🙏 Acknowledgments
-
-Built with ❤️ using pandas, matplotlib, seaborn, and scipy.
-
-## 📧 Support
-
-- 📖 [Documentation](https://github.com/yourusername/datasage)
-- 🐛 [Report Issues](https://github.com/yourusername/datasage/issues)
-- 💬 [Discussions](https://github.com/yourusername/datasage/discussions)
+This repository is owned and maintained by **Virendra Vijay Bamne**.
 
 ---
 
-**Happy Analyzing! 🎉**
+## Summary
+
+DATASAGE converts raw CSV and Excel datasets into clean, actionable analytics with a modern, production-ready workflow.
+
+It is ideal for analysts, startups, and enterprises that need:
+- Rapid data preparation
+- Automated data profiling
+- Feature-level insights
+- Professional downloadable reports
+- Interactive Streamlit exploration
+
+---
+
+## Core Features
+
+- **Data quality and cleaning**
+  - Missing value strategies: drop, mean, median, mode, forward-fill
+  - Duplicate detection and removal
+  - Outlier detection with cap/remove handling
+
+- **Data profiling and insights**
+  - Column type inference and schema recommendations
+  - Summary statistics and correlation analysis
+  - Feature importance scoring and health scoring
+  - Executive recommendations and data quality guidance
+
+- **Visualization and reporting**
+  - Auto-generated charts and dashboards
+  - Numeric distribution histograms and wellness gauges
+  - Text and PDF report generation
+  - Cleaned dataset download support
+
+- **Interactive live demo**
+  - Streamlit app for upload, cleaning, and reporting
+  - Malformed CSV fallback parsing
+  - Excel sheet selection and preview
+  - Premium dashboard experience
+
+---
+
+## Installation
+
+Install the package in editable mode:
+
+```bash
+pip install -e .
+```
+
+Install runtime dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Install with all optional features:
+
+```bash
+pip install -e ".[all]"
+```
+
+---
+
+## Quick Start
+
+```python
+import pandas as pd
+from datasage import Analyzer
+
+# Load data
+df = pd.read_csv('data.csv')
+
+# Run analysis
+analyzer = Analyzer(df)
+analyzer.clean()
+analyzer.analyze()
+analyzer.visualize()
+analyzer.generate_report('report.pdf')
+```
+
+---
+
+## Run the Live Streamlit App
+
+```bash
+streamlit run streamlit_app.py
+```
+
+The app supports:
+- CSV and Excel upload
+- Schema suggestions and guided cleaning
+- Health scoring and premium dashboards
+- Cleaned data and report downloads
+
+---
+
+## Docker Deployment
+
+Build and run with Docker:
+
+```bash
+docker build -t datasage .
+docker run -p 8501:8501 datasage
+```
+
+Or use Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+---
+
+## Project Structure
+
+```
+.
+├── datasage/               # Core library package
+├── docs/                   # Supporting documentation
+├── examples/               # Example scripts and sample datasets
+├── tests/                  # Unit tests and fixtures
+├── streamlit_app.py        # Live Streamlit demo application
+├── pyproject.toml          # Package metadata and dependencies
+├── requirements.txt        # Environment dependencies
+├── setup.py                # Install compatibility
+├── Dockerfile              # Container deployment
+├── docker-compose.yml      # Multi-service deployment
+├── CHANGELOG.md            # Version history
+├── SECURITY.md             # Security policy
+├── CODE_OF_CONDUCT.md      # Community guidelines
+├── LICENSE                 # MIT license
+└── README.md               # Project overview and usage
+```
+
+---
+
+## Testing
+
+Run tests with:
+
+```bash
+pytest tests/
+```
+
+For coverage:
+
+```bash
+pytest --cov=datasage tests/
+```
+
+---
+
+## Documentation
+
+- [Installation Guide](docs/INSTALLATION.md)
+- [API Reference](docs/API.md)
+- [Usage Examples](docs/EXAMPLES.md)
+- [Contributing Guide](docs/CONTRIBUTING.md)
+
+---
+
+## Contact & Ownership
+
+**Owner:** Virendra Vijay Bamne
+
+**Education:** B.Tech CSE, 4th Year
+
+**College:** R V Parankar College of Engineering, Arvi
+
+**Contact:** +91 8010516829
+
+This repository and source code are owned by Virendra Vijay Bamne.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for details.

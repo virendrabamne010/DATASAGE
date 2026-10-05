@@ -7,7 +7,7 @@ Thank you for your interest in contributing to DATASAGE! This guide will help yo
 ### 1. Fork and Clone
 
 ```bash
-git clone https://github.com/yourusername/datasage.git
+git clone https://github.com/virendravijaybamne/datasage.git
 cd datasage
 ```
 
@@ -185,8 +185,8 @@ docs/                 # Documentation
 ## Questions?
 
 - 📖 Check existing [documentation](../README.md)
-- 🔍 Search [closed issues](https://github.com/yourusername/datasage/issues)
-- 💬 Open a [discussion](https://github.com/yourusername/datasage/discussions)
+- 🔍 Search [closed issues](https://github.com/virendravijaybamne/datasage/issues)
+- 💬 Open a [discussion](https://github.com/virendravijaybamne/datasage/discussions)
 
 ---
 

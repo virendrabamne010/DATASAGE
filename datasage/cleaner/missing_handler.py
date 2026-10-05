@@ -104,6 +104,6 @@ class MissingValueHandler:
             
         elif strategy == 'forward_fill':
             # Time series forward fill
-            df = df.fillna(method='ffill')
+            df = df.ffill()
         
         return df

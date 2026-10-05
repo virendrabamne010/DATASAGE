@@ -7,12 +7,16 @@ It orchestrates all modules using a clean, intuitive API.
 
 import pandas as pd
 import warnings
+import logging
 from typing import Optional, Literal
 from datasage.core.utils import validate_dataframe
 from datasage.cleaner import MissingValueHandler, OutlierDetector, DuplicateRemover
 from datasage.insights import CorrelationAnalyzer, StatisticsAnalyzer, CategoryAnalyzer, TrendAnalyzer
 from datasage.visualization import ChartGenerator, DistributionPlotter, HeatmapGenerator
 from datasage.report import TextReportGenerator, PDFReportGenerator
+
+# Set up module logger
+logger = logging.getLogger(__name__)
 
 
 class Analyzer:
@@ -65,6 +69,9 @@ class Analyzer:
         # Store analysis results
         self.analysis_results = {}
         self.cleaning_stats = {}
+        
+        # Store visualization output directory
+        self.viz_output_dir = None
     
     def info(self) -> dict:
         """
@@ -85,7 +92,7 @@ class Analyzer:
     # ======================== CLEANING METHODS ========================
     
     def clean(self, 
-             handle_missing: Literal['drop_column', 'drop_row', 'mean', 'median', 'mode'] = 'drop_column',
+             handle_missing: Literal['drop_column', 'drop_row', 'mean', 'median', 'mode', 'forward_fill'] = 'drop_column',
              handle_outliers: bool = True,
              outlier_strategy: Literal['remove', 'cap'] = 'cap',
              remove_duplicates: bool = True) -> 'Analyzer':
@@ -94,6 +101,12 @@ class Analyzer:
         
         Args:
             handle_missing: Strategy for missing values
+                - 'drop_column': Remove columns with >threshold missing
+                - 'drop_row': Remove rows with any missing values
+                - 'mean': Fill numeric with mean
+                - 'median': Fill numeric with median
+                - 'mode': Fill with most frequent value
+                - 'forward_fill': Forward-fill missing values (for time series)
             handle_outliers: Whether to detect and handle outliers
             outlier_strategy: 'remove' or 'cap'
             remove_duplicates: Whether to remove duplicate rows
@@ -101,13 +114,13 @@ class Analyzer:
         Returns:
             Analyzer: Self for method chaining
         """
-        print("🧹 Cleaning dataset...")
+        logger.info("Cleaning dataset...")
         
         # Store original shape
         original_shape = self.df.shape
         
         # Handle missing values
-        print(f"  ├─ Handling missing values ({handle_missing})")
+        logger.info("Handling missing values (%s)", handle_missing)
         missing_report = self.missing_handler.analyze(self.df)
         self.cleaning_stats['missing_before'] = len(missing_report)
         
@@ -116,9 +129,10 @@ class Analyzer:
         
         # Handle outliers
         if handle_outliers:
-            print(f"  ├─ Detecting outliers ({outlier_strategy})")
+            logger.info("Detecting outliers (%s)", outlier_strategy)
             outlier_report = self.outlier_detector.detect(self.df)
             self.cleaning_stats['outliers_found'] = len(outlier_report)
+            self.cleaning_stats['outlier_report'] = outlier_report
             
             if outlier_report:
                 if outlier_strategy == 'remove':
@@ -128,7 +142,7 @@ class Analyzer:
         
         # Remove duplicates
         if remove_duplicates:
-            print(f"  └─ Removing duplicates")
+            logger.info("Removing duplicates")
             dup_report = self.duplicate_remover.analyze(self.df)
             self.cleaning_stats['duplicates_removed'] = dup_report['total_duplicates']
             
@@ -137,7 +151,7 @@ class Analyzer:
         
         self.cleaning_stats['shape_before'] = original_shape
         self.cleaning_stats['shape_after'] = self.df.shape
-        print(f"✅ Cleaning complete: {original_shape} → {self.df.shape}\n")
+        logger.info("Cleaning complete: %s -> %s", original_shape, self.df.shape)
         
         return self
     
@@ -150,28 +164,115 @@ class Analyzer:
         Returns:
             dict: All analysis results
         """
-        print("📊 Analyzing dataset...")
+        logger.info("Analyzing dataset...")
         
         # Statistics
-        print("  ├─ Computing statistics...")
+        logger.info("Computing statistics...")
         self.analysis_results['statistics'] = self.stats_analyzer.analyze(self.df)
         
         # Correlations
-        print("  ├─ Analyzing correlations...")
+        logger.info("Analyzing correlations...")
         self.corr_analyzer.compute(self.df)
         self.analysis_results['correlations'] = self.corr_analyzer.find_high_correlations()
         
         # Categories
-        print("  ├─ Analyzing categories...")
+        logger.info("Analyzing categories...")
         self.analysis_results['categories'] = self.category_analyzer.get_top_categories(self.df)
         
         # Trends
-        print("  └─ Detecting trends...")
+        logger.info("Detecting trends...")
         self.analysis_results['trends'] = self.trend_analyzer.detect_trends_in_columns(self.df)
         
-        print(f"✅ Analysis complete!\n")
+        # Executive summary
+        self.analysis_results['summary'] = self.summarize()
+        
+        logger.info("Analysis complete!")
         
         return self.analysis_results
+    
+    def summarize(self) -> dict:
+        """
+        Generate an executive summary based on analysis results.
+        """
+        info = self.info()
+        missing_columns = self.df.columns[self.df.isnull().any()].tolist()
+        top_missing = (
+            self.df.isnull().mean()
+            .mul(100)
+            .round(2)
+            .sort_values(ascending=False)
+            .head(3)
+            .to_dict()
+        )
+        duplicate_rows = int(self.df.duplicated().sum())
+        # Use the outlier report captured during cleaning (if available),
+        # otherwise detect on the current data.
+        outlier_report = self.cleaning_stats.get('outlier_report', {})
+        if not outlier_report and hasattr(self, 'outlier_detector'):
+            outlier_report = self.outlier_detector.detect(self.df)
+        high_corr = self.analysis_results.get('correlations', [])
+        trends = self.analysis_results.get('trends', {})
+
+        summary_lines = [
+            f"Dataset shape: {info['shape'][0]} rows × {info['shape'][1]} columns.",
+            f"Missing values exist in {len(missing_columns)} columns and {info['missing_values']} total cells.",
+            f"Detected {duplicate_rows} duplicate rows.",
+        ]
+
+        if outlier_report:
+            summary_lines.append(
+                f"Outliers were detected in {len(outlier_report)} numeric column(s): "
+                + ", ".join(sorted(outlier_report.keys()))
+            )
+        else:
+            summary_lines.append("No numeric outliers were detected.")
+
+        if high_corr:
+            top_corr = high_corr[0]
+            summary_lines.append(
+                f"Strong correlation found between {top_corr['variable1']} and {top_corr['variable2']} "
+                f"(r = {top_corr['correlation']})."
+            )
+        else:
+            summary_lines.append("No high correlations were identified above the configured threshold.")
+
+        if trends:
+            # trends is a dict: {column_name: trend_info}
+            trend_cols = [col for col, trend_info in trends.items() if trend_info.get('significant')]
+            if trend_cols:
+                summary_lines.append(
+                    f"Trend analysis identified significant signals in {len(trend_cols)} column(s): {', '.join(trend_cols[:3])}."
+                )
+            else:
+                summary_lines.append("Trend analysis did not identify strong patterns in the top columns.")
+        else:
+            summary_lines.append("Trend analysis did not identify strong patterns in the top columns.")
+
+        recommendations = []
+        if info['missing_values'] > 0:
+            recommendations.append('Review missing-value treatment and consider appropriate imputation or row/column removal.')
+        if duplicate_rows > 0:
+            recommendations.append('Remove duplicate rows to ensure the data is unique and accurate.')
+        if outlier_report:
+            recommendations.append('Review detected outliers and decide whether to cap or remove them based on business context.')
+        if high_corr:
+            recommendations.append('Investigate strong correlations for potential feature engineering or multicollinearity.')
+
+        if not recommendations:
+            recommendations.append('The dataset is clean and ready for reporting. No immediate remediation is needed.')
+
+        return {
+            'shape': info['shape'],
+            'missing_columns': missing_columns,
+            'missing_preview': top_missing,
+            'duplicate_rows': duplicate_rows,
+            'outliers': outlier_report,
+            'top_correlations': high_corr[:3],
+            'trends': trends,
+            'summary_lines': summary_lines,
+            'recommendations': recommendations,
+            'cleaning_actions': self.cleaning_stats,
+        }
     
     # ======================== VISUALIZATION METHODS ========================
     
@@ -188,29 +289,32 @@ class Analyzer:
         import os
         from pathlib import Path
         
-        print("📈 Generating visualizations...")
+        logger.info("Generating visualizations...")
         
         # Create output directory
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         
         # Correlation heatmap
-        print("  ├─ Correlation heatmap...")
-        fig = self.heatmap_generator.correlation_heatmap(self.df)
-        self.heatmap_generator.save_figure(fig, f"{output_dir}/01_correlation_heatmap.png")
+        logger.info("Creating correlation heatmap...")
+        numeric_cols = self.df.select_dtypes(include=['number']).columns
+        if len(numeric_cols) > 1:
+            fig = self.heatmap_generator.correlation_heatmap(self.df)
+            self.heatmap_generator.save_figure(fig, f"{output_dir}/01_correlation_heatmap.png")
         
         # Distribution plots
-        print("  ├─ Distribution plots...")
+        logger.info("Creating distribution plots...")
         numeric_cols = self.df.select_dtypes(include=['number']).columns[:3]  # Top 3
         for i, col in enumerate(numeric_cols):
             fig = self.dist_plotter.histogram(self.df[col], title=f"Distribution: {col}")
             self.dist_plotter.save_figure(fig, f"{output_dir}/02_dist_{i}_{col}.png")
         
-        # Box plot
-        print("  └─ Box plots...")
-        fig = self.dist_plotter.box_plot(self.df)
-        self.dist_plotter.save_figure(fig, f"{output_dir}/03_boxplot.png")
+        # Box plot (only if there are numeric columns)
+        if len(numeric_cols) > 0:
+            logger.info("Creating box plots...")
+            fig = self.dist_plotter.box_plot(self.df)
+            self.dist_plotter.save_figure(fig, f"{output_dir}/03_boxplot.png")
         
-        print(f"✅ Visualizations saved to '{output_dir}'\n")
+        logger.info("Visualizations saved to '%s'", output_dir)
         self.viz_output_dir = output_dir
         
         return self
@@ -227,14 +331,14 @@ class Analyzer:
             format: Report format ('text' or 'pdf')
             include_charts: Whether to include visualizations in PDF
         """
-        print("📄 Generating report...")
+        logger.info("Generating report...")
         
         if format == 'text':
             self._generate_text_report(filepath)
         else:
             self._generate_pdf_report(filepath, include_charts)
         
-        print(f"✅ Report saved to '{filepath}'\n")
+        logger.info("Report saved to '%s'", filepath)
     
     def _generate_text_report(self, filepath: str) -> None:
         """Generate text report."""
@@ -250,11 +354,17 @@ class Analyzer:
             report.add_key_value_table(self.cleaning_stats)
         
         # Statistics
+        if self.analysis_results.get('summary'):
+            report.add_header("Executive Summary", level=2)
+            for line in self.analysis_results['summary']['summary_lines']:
+                report.add_paragraph(line)
+            report.add_divider()
+
         if 'statistics' in self.analysis_results:
             report.add_header("Statistical Summary", level=2)
             for col, stats in self.analysis_results['statistics'].items():
                 report.add_key_value_table(stats, f"{col}")
-        
+
         # Correlations
         if self.analysis_results.get('correlations'):
             report.add_header("High Correlations", level=2)
@@ -304,7 +414,7 @@ class Analyzer:
             report.add_table(corr_df)
         
         # Add visualizations
-        if include_charts and hasattr(self, 'viz_output_dir'):
+        if include_charts and hasattr(self, 'viz_output_dir') and self.viz_output_dir:
             report.add_page_break()
             report.add_heading("Visualizations")
             import os
@@ -314,6 +424,12 @@ class Analyzer:
                 for img_file in sorted(os.listdir(viz_dir))[:3]:
                     if img_file.endswith('.png'):
                         report.add_image(os.path.join(viz_dir, img_file))
+        
+        if self.analysis_results.get('summary'):
+            report.add_page_break()
+            report.add_heading("Recommendations")
+            for recommendation in self.analysis_results['summary']['recommendations']:
+                report.add_paragraph(f"• {recommendation}")
         
         report.build()
     
@@ -326,5 +442,5 @@ class Analyzer:
         """
         self.df = self.original_df.copy()
         self.cleaning_stats = {}
-        print("🔄 Reset to original data\n")
+        logger.info("Reset to original data")
         return self

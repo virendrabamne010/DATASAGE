@@ -5,6 +5,7 @@ This module creates heatmap visualizations of correlations
 between numeric variables.
 """
 
+import warnings
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,17 +48,24 @@ class HeatmapGenerator:
         
         # Create heatmap
         fig, ax = plt.subplots(figsize=self.figsize, dpi=self.dpi)
-        sns.heatmap(
-            corr,
-            annot=True,  # Show correlation values
-            fmt='.2f',   # 2 decimal places
-            cmap='coolwarm',
-            center=0,
-            square=True,
-            linewidths=1,
-            cbar_kws={"shrink": 0.8},
-            ax=ax
-        )
+        with warnings.catch_warnings():
+            # Suppress seaborn's internal cmap.set_bad deprecation warning
+            warnings.filterwarnings(
+                "ignore",
+                message="The set_bad function will be deprecated",
+                category=PendingDeprecationWarning,
+            )
+            sns.heatmap(
+                corr,
+                annot=True,  # Show correlation values
+                fmt='.2f',   # 2 decimal places
+                cmap='coolwarm',
+                center=0,
+                square=True,
+                linewidths=1,
+                cbar_kws={"shrink": 0.8},
+                ax=ax
+            )
         ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
         plt.tight_layout()
         return fig
@@ -78,13 +86,20 @@ class HeatmapGenerator:
         missing_matrix = df.isnull().astype(int)
         
         fig, ax = plt.subplots(figsize=self.figsize, dpi=self.dpi)
-        sns.heatmap(
-            missing_matrix,
-            cbar=True,
-            cmap='RdYlGn_r',
-            yticklabels=False,
-            ax=ax
-        )
+        with warnings.catch_warnings():
+            # Suppress seaborn's internal cmap.set_bad deprecation warning
+            warnings.filterwarnings(
+                "ignore",
+                message="The set_bad function will be deprecated",
+                category=PendingDeprecationWarning,
+            )
+            sns.heatmap(
+                missing_matrix,
+                cbar=True,
+                cmap='RdYlGn_r',
+                yticklabels=False,
+                ax=ax
+            )
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel('Columns')
         plt.tight_layout()

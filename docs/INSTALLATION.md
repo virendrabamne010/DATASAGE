@@ -19,7 +19,7 @@ pip install datasage
 Clone the repository and install in development mode:
 
 ```bash
-git clone https://github.com/yourusername/datasage.git
+git clone https://github.com/virendravijaybamne/datasage.git
 cd datasage
 pip install -e .
 ```

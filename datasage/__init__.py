@@ -15,7 +15,7 @@ Quick Start:
     >>> analyzer.visualize()
     >>> analyzer.generate_report('report.pdf')
 
-Documentation: https://github.com/yourusername/datasage
+Documentation: https://github.com/virendravijaybamne/datasage
 License: MIT
 """
 

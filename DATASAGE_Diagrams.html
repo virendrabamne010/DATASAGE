@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATASAGE - Architecture & Data Flow Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #1e3a8a, #4f46e5);
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            color: #94a3b8;
+            margin-top: 8px;
+            font-size: 1.1em;
+        }
+        .header .meta {
+            color: #64748b;
+            font-size: 0.85em;
+            margin-top: 6px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 10px 24px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: #94a3b8;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+        .tab.active, .tab:hover {
+            background: linear-gradient(135deg, #1e40af, #4f46e5);
+            border-color: #3b82f6;
+            color: #fff;
+            box-shadow: 0 0 18px rgba(59,130,246,.35);
+        }
+        .section {
+            display: none;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .section.active { display: block; }
+        .section-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .section-title h2 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        .section-title p {
+            color: #64748b;
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+        .diagram-container {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 20px;
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        .diagram-container .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+        .stat-card .num {
+            font-size: 1.8em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-card .lbl {
+            font-size: 0.75em;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.8em;
+            color: #94a3b8;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+        .module-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .module-card:hover {
+            transform: translateY(-3px);
+            border-color: #3b82f6;
+            box-shadow: 0 10px 30px rgba(0,0,0,.4);
+        }
+        .module-card h3 {
+            font-size: 1em;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #e2e8f0;
+        }
+        .module-card .file-path {
+            font-family: 'Consolas', monospace;
+            font-size: 0.7em;
+            color: #475569;
+            margin-bottom: 10px;
+        }
+        .module-card p {
+            font-size: 0.82em;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+        .module-card ul {
+            list-style: none;
+            margin-top: 8px;
+        }
+        .module-card ul li {
+            font-size: 0.75em;
+            color: #64748b;
+            padding: 2px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        .module-card ul li::before {
+            content: ">";
+            color: #3b82f6;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .color-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0;
+        }
+        .module-card { position: relative; overflow: hidden; }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #334155;
+            color: #475569;
+            font-size: 0.8em;
+            margin-top: 30px;
+        }
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+        }
+        .tech-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 20px;
+        }
+        .tech-section h3 {
+            font-size: 0.95em;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 999px;
+            padding: 4px 11px;
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .tech-section p {
+            font-size: 0.78em;
+            color: #475569;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📊 DATASAGE</h1>
+    <p>Automated Data Analytics Platform — Architecture & Data Flow Diagrams</p>
+    <div class="meta">Owner: Virendra Vijay Bamne | R V Parankar COE, Arvi | v0.1.0 | MIT License</div>
+</div>
+
+<div class="tabs">
+    <div class="tab active" onclick="showSection('arch', this)">🏗️ Architecture</div>
+    <div class="tab" onclick="showSection('dfd', this)">🔄 Data Flow</div>
+    <div class="tab" onclick="showSection('modules', this)">📦 Modules</div>
+    <div class="tab" onclick="showSection('stack', this)">🛠️ Tech Stack</div>
+</div>
+
+<!-- ==================== ARCHITECTURE SECTION ==================== -->
+<div class="section active" id="arch">
+    <div class="section-title">
+        <h2>System Architecture Diagram</h2>
+        <p>6-layer architecture of DATASAGE — from user interface down to output files</p>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card"><div class="num">5</div><div class="lbl">Sub-packages</div></div>
+        <div class="stat-card"><div class="num">13</div><div class="lbl">Python Classes</div></div>
+        <div class="stat-card"><div class="num">3</div><div class="lbl">Output Formats</div></div>
+        <div class="stat-card"><div class="num">757</div><div class="lbl">Streamlit Lines</div></div>
+        <div class="stat-card"><div class="num">2</div><div class="lbl">Deploy Options</div></div>
+        <div class="stat-card"><div class="num">PyPI</div><div class="lbl">Published</div></div>
+    </div>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TB
+    subgraph L1["LAYER 1: INTERFACE"]
+        A1[🌐 Streamlit Web App<br/>streamlit_app.py<br/>Upload - Profile - Clean - Download]
+        A2[🐍 Python Library API<br/>from datasage import Analyzer<br/>Programmatic / Scripting access]
+        A3[🐳 Docker Container<br/>Dockerfile + docker-compose.yml<br/>Port 8501 - Production deploy]
+        A4[🧪 Tests and Examples<br/>tests/ + examples/<br/>pytest - fixtures - sample data]
+    end
+
+    subgraph L2["LAYER 2: GATEWAY"]
+        B1[⚙️ datasage/__init__.py<br/>Public API Gateway<br/>Exports all classes - version.py - config singleton]
+    end
+
+    subgraph L3["LAYER 3: CORE API"]
+        C1[🧠 Analyzer - Core Orchestrator<br/>datasage/core/analyzer.py<br/>clean() · analyze() · visualize() · generate_report() · reset() · info() · summarize()<br/>Fluent API - holds original_df and working df - stores cleaning_stats and analysis_results]
+    end
+
+    subgraph L4["LAYER 4: MODULES"]
+        D1[🧹 CLEANER MODULE<br/>datasage/cleaner/<br/>MissingValueHandler | OutlierDetector | DuplicateRemover]
+        D2[🔍 INSIGHTS MODULE<br/>datasage/insights/<br/>StatisticsAnalyzer | CorrelationAnalyzer | CategoryAnalyzer | TrendAnalyzer]
+        D3[📊 VISUALIZATION MODULE<br/>datasage/visualization/<br/>ChartGenerator | DistributionPlotter | HeatmapGenerator]
+    end
+
+    subgraph L5["LAYER 5: SUPPORT"]
+        E1[📄 REPORT MODULE<br/>datasage/report/<br/>PDFReportGenerator | TextReportGenerator]
+        E2[⚙️ CONFIG<br/>datasage/config.py<br/>MISSING_THRESHOLD=0.5 · IQR_MULTIPLIER=1.5 · CORRELATION_THRESHOLD=0.7 · FIGURE_SIZE=(12,6) · DPI=100]
+        E3[⚠️ EXCEPTIONS & UTILITIES<br/>core/exceptions.py<br/>InvalidDataError · NoDataError · AnalysisError<br/>core/utils.py<br/>validate_dataframe() · get_numeric_columns()]
+    end
+
+    subgraph L6["LAYER 6: OUTPUTS"]
+        F1[📄 PDF Report<br/>report.pdf]
+        F2[📊 PNG Charts<br/>output/*.png]
+        F3[📋 Cleaned CSV<br/>cleaned_dataset.csv]
+        F4[🔥 Insights Dict<br/>Python dict / JSON]
+        F5[📝 Text Report<br/>report.txt]
+    end
+
+    A1 --> B1
+    A2 --> B1
+    A3 --> B1
+    A4 --> B1
+    B1 --> C1
+    C1 --> D1
+    C1 --> D2
+    C1 --> D3
+    D1 --> E1
+    D2 --> E1
+    D3 --> E1
+    E1 --> F1
+    E1 --> F5
+    D3 --> F2
+    C1 --> F4
+    D1 --> F3
+
+    style A1 fill:#1e40af,stroke:#3b82f6,color:#fff
+    style A2 fill:#5b21b6,stroke:#8b5cf6,color:#fff
+    style A3 fill:#164e63,stroke:#0e7490,color:#fff
+    style A4 fill:#1e293b,stroke:#334155,color:#fff
+    style B1 fill:#1e293b,stroke:#3b82f6,color:#fff
+    style C1 fill:#1e3a8a,stroke:#3b82f6,color:#fff
+    style D1 fill:#064e3b,stroke:#10b981,color:#fff
+    style D2 fill:#4c1d95,stroke:#8b5cf6,color:#fff
+    style D3 fill:#78350f,stroke:#f59e0b,color:#fff
+    style E1 fill:#7f1d1d,stroke:#ef4444,color:#fff
+    style E2 fill:#1e293b,stroke:#64748b,color:#fff
+    style E3 fill:#1e293b,stroke:#64748b,color:#fff
+    style F1 fill:#7f1d1d,stroke:#ef4444,color:#fff
+    style F2 fill:#1e3a8a,stroke:#3b82f6,color:#fff
+    style F3 fill:#065f46,stroke:#10b981,color:#fff
+    style F4 fill:#4c1d95,stroke:#8b5cf6,color:#fff
+    style F5 fill:#78350f,stroke:#f59e0b,color:#fff
+        </pre>
+    </div>
+</div>
+
+<!-- ==================== DATA FLOW SECTION ==================== -->
+<div class="section" id="dfd">
+    <div class="section-title">
+        <h2>Data Flow Diagram (DFD)</h2>
+        <p>Exact journey of data through DATASAGE — from raw file upload to professional outputs</p>
+    </div>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TD
+    US[👤 User / Data<br/>CSV or Excel file] -->|upload| ST[🌐 Streamlit App<br/>streamlit_app.py]
+
+    ST -->|File Upload| SF[📁 File Upload Widget<br/>st.file_uploader]
+    SF -->|Validates & Parses| SR[📥 safe_read_data()<br/>File Type Detection<br/>CSV/Excel fallback]
+
+    SR -->|Returns DataFrame| PD[👁️ Data Preview<br/>st.dataframe]
+    PD -->|Profile Analysis| PR[📋 profile_dataframe()<br/>Schema Inference<br/>infer_schema()]
+
+    PR -->|Health Metrics| HC[💚 compute_health_score()]
+    HC -->|Score & Label| WD[📊 Wellness Dashboard<br/>render_wellness_dashboard()]
+
+    WD -->|User selects cleaning options| CL[🧹 Column-Level Cleaning<br/>drop/mean/median/mode/ffill]
+    CL -->|Apply Cleaning| CLEAN[✨ clean_df()<br/>Handles:<br/>• Missing Values<br/>• Column Dropping<br/>• Imputation]
+
+    CLEAN -->|Cleaned DataFrame| AN[🧠 Analyzer<br/>datasage/core/analyzer.py]
+
+    AN -->|clean() Method| Missing[🧹 MissingValueHandler<br/>datasage/cleaner/missing_handler.py]
+    AN -->|clean() Method| Outlier[📈 OutlierDetector<br/>datasage/cleaner/outlier_detector.py]
+    AN -->|clean() Method| Duplicate[🔁 DuplicateRemover<br/>datasage/cleaner/duplicate_remover.py]
+
+    AN -->|analyze() Method| Stats[📊 StatisticsAnalyzer<br/>datasage/insights/statistics.py]
+    AN -->|analyze() Method| Corr[🔗 CorrelationAnalyzer<br/>datasage/insights/correlations.py]
+    AN -->|analyze() Method| Cat[🏷️ CategoryAnalyzer<br/>datasage/insights/categories.py]
+    AN -->|analyze() Method| Trend[📈 TrendAnalyzer<br/>datasage/insights/trends.py]
+
+    AN -->|visualize() Method| Viz[📊 Visualization Modules<br/>datasage/visualization/]
+    Viz -->|correlation_heatmap| Heatmap[🔥 HeatmapGenerator]
+    Viz -->|histogram/distribution| Dist[📊 DistributionPlotter]
+    Viz -->|scatter/pie/bars| Chart[📈 ChartGenerator]
+
+    Viz -->|Save PNG files| Output[📁 Output Directory<br/>examples/output/upload_{timestamp}/]
+    Heatmap -->|save_figure| Output
+    Dist -->|save_figure| Output
+    Chart -->|save_figure| Output
+
+    AN -->|generate_report() Method| Report[📄 Report Generation<br/>datasage/report/]
+    Report -->|format='text'| TextReport[📝 TextReportGenerator]
+    Report -->|format='pdf' & include_charts| PDFReport[📄 PDFReportGenerator<br/>includes charts from Output]
+
+    Output -->|Displays in Streamlit| UI_Display[🖥️ Streamlit Display]
+    UI_Display -->|Download Buttons| DL[⬇️ Download Options:<br/>• Cleaned CSV<br/>• Cleaned Excel<br/>• Text Report<br/>• PDF Report<br/>• Visualizations]
+
+    ST -->|Saves to History| History[📜 Upload History<br/>examples/output/upload_history.json]
+    History -->|Shows in Sidebar| SH[📋 Sidebar History Section]
+
+    style US fill:#e1fcef,stroke:#006651,stroke-width:2px
+    style ST fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style SR fill:#fff3e0,stroke:#fb8c00,stroke-width:2px
+    style AN fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style Missing fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style Outlier fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style Duplicate fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style Stats fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    style Corr fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    style Cat fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    style Trend fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    style Viz fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    style Heatmap fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    style Dist fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    style Chart fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    style Output fill:#f1f8e9,stroke:#388e3c,stroke-width:2px
+    style Report fill:#fce4ec,stroke:#c62828,stroke-width:2px
+    style TextReport fill:#fce4ec,stroke:#c62828,stroke-width:2px
+    style PDFReport fill:#fce4ec,stroke:#c62828,stroke-width:2px
+    style DL fill:#e8eaf6,stroke:#3949ab,stroke-width:2px
+        </pre>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#e3f2fd"></div>Input Flow</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e8f5e9"></div>Cleaning</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f3e5f5"></div>Analysis</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e1f5fe"></div>Visualization</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fce4ec"></div>Report Generation</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f1f8e9"></div>Output Storage</div>
+    </div>
+</div>
+
+<!-- ==================== MODULES SECTION ==================== -->
+<div class="section" id="modules">
+    <div class="section-title">
+        <h2>Module Breakdown</h2>
+        <p>Every module, class, method, and file in DATASAGE explained in detail</p>
+    </div>
+
+    <div class="module-grid">
+        <div class="module-card">
+            <div class="color-bar" style="background:linear-gradient(90deg,#2563eb,#7c3aed)"></div>
+            <h3>🧠 Core — Analyzer Class</h3>
+            <div class="file-path">datasage/core/analyzer.py (~430 lines)</div>
+            <p>The <strong>main orchestrator</strong>. All user interaction happens through this single class. It wires together all sub-modules using a <strong>fluent API</strong> (method chaining) pattern.</p>
+            <ul>
+                <li><strong>clean()</strong> — delegates to 3 cleaner classes in sequence</li>
+                <li><strong>analyze()</strong> — runs all 4 insight analyzers, returns a dict</li>
+                <li><strong>visualize()</strong> — saves PNG charts to ./output/ directory</li>
+                <li><strong>generate_report()</strong> — writes PDF or .txt report file</li>
+                <li><strong>summarize()</strong> — executive summary with actionable recommendations</li>
+                <li><strong>reset()</strong> — restores the original unmodified DataFrame</li>
+                <li><strong>info()</strong> — prints shape, dtypes, memory, and duplicate count</li>
+                <li>Stores cleaning_stats and analysis_results as instance dicts</li>
+            </ul>
+        </div>
+
+        <div class="module-card">
+            <div class="color-bar" style="background:linear-gradient(90deg,#059669,#0891b2)"></div>
+            <h3>🧹 Cleaner — 3 Classes</h3>
+            <div class="file-path">datasage/cleaner/ (3 files)</div>
+            <p>Handles all <strong>data quality problems</strong>. Each class can be used standalone or is called automatically by Analyzer.clean().</p>
+            <ul>
+                <li><strong>MissingValueHandler</strong> — analyze() scans all columns for NaN. handle() supports: drop_col (default if >50%), drop_row, mean, median, mode, forward_fill</li>
+                <li><strong>OutlierDetector</strong> — IQR fence: Q1−1.5*IQR to Q3+1.5*IQR. Z-score: mean ± 3*std. Methods: detect(), remove_outliers(), cap_outliers()</li>
+                <li><strong>DuplicateRemover</strong> — analyze() returns count, remove() calls drop_duplicates()</li>
+            </ul>
+        </div>
+
+        <div class="module-card">
+            <div class="color-bar" style="background:linear-gradient(90deg,#7c3aed,#db2777)"></div>
+            <h3>🔍 Insights — 4 Analyzers</h3>
+            <div class="file-path">datasage/insights/ (4 files)</div>
+            <p>Generates <strong>statistical intelligence</strong> from the cleaned DataFrame. Results are returned as nested dicts and stored in Analyzer.analysis_results.</p>
+            <ul>
+                <li><strong>StatisticsAnalyzer</strong> — count, mean, median, std, min, max, Q25, Q75, skewness, kurtosis per numeric column</li>
+                <li><strong>CorrelationAnalyzer</strong> — Pearson / Spearman / Kendall matrix, flags high-correlation pairs above 0.7 threshold</li>
+                <li><strong>CategoryAnalyzer</strong> — top N (default 5) value counts per categorical column</li>
+                <li><strong>TrendAnalyzer</strong> — scipy.stats.linregress(): slope, R², p-value. Labelled significant if p < 0.05</li>
+            </ul>
+        </div>
+
+        <div class="module-card">
+            <div class="color-bar" style="background:linear-gradient(90deg,#d97706,#dc2626)"></div>
+            <h3>📊 Visualization — 3 Plotters</h3>
+            <div class="file-path">datasage/visualization/ (3 files)</div>
+            <p>Generates <strong>matplotlib and seaborn</strong> charts saved as PNG files. The Streamlit app additionally uses Altair for interactive charts.</p>
+            <ul>
+                <li><strong>ChartGenerator</strong> — bar_chart(), line_chart(), scatter_chart(), pie_chart(). All use seaborn whitegrid style</li>
+                <li><strong>DistributionPlotter</strong> — histogram(), kde_plot(), box_plot(), violin_plot(). Saves to configured output directory</li>
+                <li><strong>HeatmapGenerator</strong> — correlation_heatmap() using seaborn. Auto-detects numeric columns</li>
+                <li>All use save_figure(fig, path) at config.DPI (100)</li>
+            </ul>
+        </div>
+
+        <div class="module-card">
+            <div class="color-bar" style="background:linear-gradient(90deg,#dc2626,#9333ea)"></div>
+            <h3>📄 Report — 2 Generators</h3>
+            <div class="file-path">datasage/report/ (2 files)</div>
+            <p>Produces <strong>professional downloadable reports</strong> combining statistics, embedded charts, and data-driven recommendations.</p>
+            <ul>
+                <li><strong>PDFReportGenerator</strong> — ReportLab: custom stylesheet, title page with timestamp, alternating-row tables, embedded PNG charts, recommendations page. build() writes PDF</li>
+                <li><strong>TextReportGenerator</strong> — Plain .txt with section dividers, key-value tables, dataset overview, stats, correlations, categories</li>
+                <li>Both called via Analyzer.generate_report(filepath, format="pdf"/"txt")</li>
+            </ul>
+        </div>
+
+        <div class="module-card">
+            <div class="color-bar" style="background:linear-gradient(90deg,#0891b2,#059669)"></div>
+            <h3>🌐 Streamlit Web App</h3>
+            <div class="file-path">streamlit_app.py (757 lines)</div>
+            <p>Full-featured <strong>interactive web dashboard</strong> for non-technical analysts — no coding required.</p>
+            <ul>
+                <li>CSV and Excel upload with sheet picker and malformed-CSV fallback</li>
+                <li>Animated SVG health score gauge (0–100) based on data quality</li>
+                <li>Schema inference with type coercion suggestions per column</li>
+                <li>Per-column cleaning controls in sidebar with live preview</li>
+                <li>Feature importance bar chart using Altair (variance, correlation, missingness)</li>
+                <li>Executive summary, outlier row preview, wellness dashboard tabs</li>
+                <li>Upload history persisted to JSON, light/dark theme toggle</li>
+                <li>One-click download: cleaned CSV and PDF report</li>
+            </ul>
+        </div>
+
+        <div class="module-card">
+            <div class="color-bar" style="background:linear-gradient(90deg,#475569,#1e40af)"></div>
+            <h3>⚙️ Config System</h3>
+            <div class="file-path">datasage/config.py (dataclass singleton)</div>
+            <p>A <strong>centralized dataclass singleton</strong> imported by all modules — the single source of truth for every threshold and setting.</p>
+            <ul>
+                <li>MISSING_THRESHOLD = 0.5 — drop cols with >50% NaN</li>
+                <li>OUTLIER_METHOD = "iqr" (alternative: "zscore")</li>
+                <li>IQR_MULTIPLIER = 1.5 — standard Tukey fence</li>
+                <li>ZSCORE_THRESHOLD = 3.0 — 3-sigma rule</li>
+                <li>CORRELATION_THRESHOLD = 0.7 — high-corr cutoff</li>
+                <li>TOP_CATEGORIES_COUNT = 5</li>
+                <li>FIGURE_SIZE = (12, 6), DPI = 100</li>
+            </ul>
+        </div>
+
+        <div class="module-card">
+            <div class="color-bar" style="background:linear-gradient(90deg,#0891b2,#7c3aed)"></div>
+            <h3>🐳 DevOps and Deployment</h3>
+            <div class="file-path">Dockerfile, docker-compose.yml, .github/workflows/</div>
+            <p>Production-ready <strong>containerization and CI/CD pipeline</strong> for real-world deployment at any scale.</p>
+            <ul>
+                <li>Dockerfile — builds Streamlit image, exposes port 8501</li>
+                <li>docker-compose.yml — multi-service orchestration</li>
+                <li>.github/workflows/ci.yml — automated pytest on every push/PR</li>
+                <li>pyproject.toml — PEP 517 packaging with setuptools</li>
+                <li>Published to PyPI as the "datasage" package</li>
+                <li>MIT License, Python 3.10+ support</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TECH STACK SECTION ==================== -->
+<div class="section" id="stack">
+    <div class="section-title">
+        <h2>Technology Stack</h2>
+        <p>Complete list of all libraries, frameworks, and tools used in DATASAGE</p>
+    </div>
+
+    <div class="tech-grid">
+        <div class="tech-section">
+            <h3 style="color:#60a5fa">📊 Data Processing</h3>
+            <div class="tags">
+                <span class="tag"><span class="dot" style="background:#3b82f6"></span>pandas 1.3+</span>
+                <span class="tag"><span class="dot" style="background:#8b5cf6"></span>numpy 1.21+</span>
+                <span class="tag"><span class="dot" style="background:#10b981"></span>scipy 1.7+</span>
+                <span class="tag"><span class="dot" style="background:#f59e0b"></span>openpyxl 3.0+</span>
+                <span class="tag"><span class="dot" style="background:#ef4444"></span>xlrd 2.0+</span>
+            </div>
+            <p>pandas for all DataFrame operations. scipy.stats.linregress for trend detection. openpyxl and xlrd parse .xlsx and .xls files.</p>
+        </div>
+
+        <div class="tech-section">
+            <h3 style="color:#34d399">📈 Visualization</h3>
+            <div class="tags">
+                <span class="tag"><span class="dot" style="background:#ef4444"></span>matplotlib 3.4+</span>
+                <span class="tag"><span class="dot" style="background:#3b82f6"></span>seaborn 0.11+</span>
+                <span class="tag"><span class="dot" style="background:#f59e0b"></span>altair 5.0+</span>
+            </div>
+            <p>matplotlib + seaborn generate static PNG charts saved to disk. Altair creates interactive Vega-Lite charts inside the Streamlit web app.</p>
+        </div>
+
+        <div class="tech-section">
+            <h3 style="color:#f59e0b">🌐 Web Interface</h3>
+            <div class="tags">
+                <span class="tag"><span class="dot" style="background:#ef4444"></span>streamlit 1.30+</span>
+            </div>
+            <p>Streamlit powers the entire web UI: file upload, metrics, charts, download buttons, sidebar controls, and the custom SVG animated health gauge — all in pure Python.</p>
+        </div>
+
+        <div class="tech-section">
+            <h3 style="color:#c4b5fd">📄 Report Generation</h3>
+            <div class="tags">
+                <span class="tag"><span class="dot" style="background:#3b82f6"></span>reportlab 3.6+</span>
+            </div>
+            <p>ReportLab renders professional PDF reports with custom paragraph styles, alternating-row-colour tables, embedded PNG chart images, and a timestamped title page.</p>
+        </div>
+
+        <div class="tech-section">
+            <h3 style="color:#fca5a5">✅ Code Quality and Testing</h3>
+            <div class="tags">
+                <span class="tag"><span class="dot" style="background:#10b981"></span>pytest 7.0+</span>
+                <span class="tag"><span class="dot" style="background:#3b82f6"></span>pytest-cov</span>
+                <span class="tag"><span class="dot" style="background:#f59e0b"></span>black 22.0+</span>
+                <span class="tag"><span class="dot" style="background:#8b5cf6"></span>flake8 4.0+</span>
+                <span class="tag"><span class="dot" style="background:#ef4444"></span>mypy 0.900+</span>
+                <span class="tag"><span class="dot" style="background:#6b7280"></span>isort 5.0+</span>
+            </div>
+            <p>Full test coverage via pytest. black for code formatting, flake8 for linting, mypy for type-checking, isort for import ordering.</p>
+        </div>
+
+        <div class="tech-section">
+            <h3 style="color:#93c5fd">🛠️ Packaging and DevOps</h3>
+            <div class="tags">
+                <span class="tag"><span class="dot" style="background:#0891b2"></span>Docker</span>
+                <span class="tag"><span class="dot" style="background:#334155"></span>GitHub Actions CI</span>
+                <span class="tag"><span class="dot" style="background:#f59e0b"></span>setuptools 45+</span>
+                <span class="tag"><span class="dot" style="background:#3b82f6"></span>wheel</span>
+                <span class="tag"><span class="dot" style="background:#8b5cf6"></span>pyproject.toml PEP 517</span>
+                <span class="tag"><span class="dot" style="background:#ef4444"></span>PyPI Published</span>
+                <span class="tag"><span class="dot" style="background:#10b981"></span>Python 3.10+</span>
+                <span class="tag"><span class="dot" style="background:#6b7280"></span>MIT License</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project summary card -->
+    <div style="margin-top:36px;background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(139,92,246,.12));border:1px solid rgba(99,179,237,.25);border-radius:16px;padding:28px;text-align:center;">
+        <div style="font-size:1.25rem;font-weight:800;color:#e2e8f0;margin-bottom:10px;">Project Summary</div>
+        <p style="color:#94a3b8;max-width:700px;margin:0 auto;line-height:1.8;font-size:.9rem;">
+            DATASAGE is a <strong style="color:#60a5fa">production-ready, open-source Python analytics platform</strong> developed as a B.Tech CSE 4th Year Final Project by Virendra Vijay Bamne at R V Parankar College of Engineering, Arvi. It demonstrates complete end-to-end software engineering: from a clean modular Python library with full test coverage, to a Streamlit web dashboard, with Docker containerization and CI/CD — published on PyPI.
+        </p>
+        <div style="margin-top:22px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+            <div style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:12px 22px;"><div style="font-size:1.55rem;font-weight:800;color:#60a5fa;">13</div><div style="font-size:.73rem;color:#475569;">Python Classes</div></div>
+            <div style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:12px 22px;"><div style="font-size:1.55rem;font-weight:800;color:#34d399;">5</div><div style="font-size:.73rem;color:#475569;">Sub-packages</div></div>
+            <div style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:12px 22px;"><div style="font-size:1.55rem;font-weight:800;color:#fcd34d;">3</div><div style="font-size:.73rem;color:#475569;">Output Formats</div></div>
+            <div style="background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:12px 22px;"><div style="font-size:1.55rem;font-weight:800;color:#c4b5fd;">757</div><div style="font-size:.73rem;color:#475569;">Streamlit Lines</div></div>
+            <div style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 22px;"><div style="font-size:1.55rem;font-weight:800;color:#fca5a5;">PyPI</div><div style="font-size:.73rem;color:#475569;">Published</div></div>
+            <div style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);border-radius:10px;padding:12px 22px;"><div style="font-size:1.55rem;font-weight:800;color:#67e8f9;">MIT</div><div style="font-size:.73rem;color:#475569;">License</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    DATASAGE — Architecture and Data Flow Diagrams | Virendra Vijay Bamne — B.Tech CSE 4th Year — R V Parankar COE, Arvi
+</div>
+
+<script>
+    function showSection(id, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        el.classList.add('active');
+    }
+
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'dark',
+        themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#e2e8f0',
+            primaryBorderColor: '#334155',
+            lineColor: '#64748b',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e3a8a',
+            fontFamily: 'Segoe UI, sans-serif',
+            fontSize: '13px'
+        },
+        flowchart: {
+            curve: 'basis',
+            padding: 12,
+            nodeSpacing: 30,
+            rankSpacing: 40,
+            useMaxWidth: true
+        }
+    });
+</script>
+
+</body>
+</html>
